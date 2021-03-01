@@ -45,14 +45,12 @@ def display_images(images, titles=None, cols=4, cmap=None, norm=None,
     titles = titles if titles is not None else [""] * len(images)
     rows = len(images) // cols + 1
     plt.figure(figsize=(14, 14 * rows // cols))
-    i = 1
-    for image, title in zip(images, titles):
+    for i, (image, title) in enumerate(zip(images, titles), start=1):
         plt.subplot(rows, cols, i)
         plt.title(title, fontsize=9)
         plt.axis('off')
         plt.imshow(image.astype(np.uint8), cmap=cmap,
                    norm=norm, interpolation=interpolation)
-        i += 1
     plt.show()
 
 
@@ -464,9 +462,7 @@ def display_table(table):
     """
     html = ""
     for row in table:
-        row_html = ""
-        for col in row:
-            row_html += "<td>{:40}</td>".format(str(col))
+        row_html = "".join("<td>{:40}</td>".format(str(col)) for col in row)
         html += "<tr>" + row_html + "</tr>"
     html = "<table>" + html + "</table>"
     IPython.display.display(IPython.display.HTML(html))
@@ -485,7 +481,9 @@ def display_weight_stats(model):
             weight_name = weight_tensors[i].name
             # Detect problematic layers. Exclude biases of conv layers.
             alert = ""
-            if w.min() == w.max() and not (l.__class__.__name__ == "Conv2D" and i == 1):
+            if w.min() == w.max() and (
+                l.__class__.__name__ != "Conv2D" or i != 1
+            ):
                 alert += "<span style='color:red'>*** dead?</span>"
             if np.abs(w.min()) > 1000 or np.abs(w.max()) > 1000:
                 alert += "<span style='color:red'>*** Overflow?</span>"
